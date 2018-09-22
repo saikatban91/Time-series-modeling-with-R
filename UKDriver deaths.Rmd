@@ -1,0 +1,74 @@
+---
+title: "UK driver deaths modeling"
+author: "Saikat Banerjee"
+date: "June 11, 2018"
+output: html_document
+---
+
+### Synopsis
+This data analysis makes use of the built-in UKDriverDeaths dataset in R. This analysis is focused on exploratory visualization, fitting the time-series data using two basic models and evaluate their relative performance.
+
+### Loading of the data in R and verification of it as a time-series
+```{r}
+# Dataset for driver deaths in UK
+driver <- UKDriverDeaths
+# Verifying identity
+is.ts(UKDriverDeaths)
+# The start and end of the UKDriverDeaths data
+start(UKDriverDeaths); end(UKDriverDeaths)
+```
+### How many data points are there each year?
+```{r}
+frequency((UKDriverDeaths))
+cycle(UKDriverDeaths)
+```
+
+### Exploratory visulaization and basic stats on the dataset
+```{r}
+# Visualizing the deaths of the UK drivers
+plot(UKDriverDeaths)
+# mean and sd of the ts
+mu <- mean(UKDriverDeaths)
+sigma <- sd(UKDriverDeaths)
+# Visualizing the first difference of the data,
+# showing the trend with time is removed
+driver_diff <- diff(UKDriverDeaths); ts.plot(driver_diff)
+```
+
+### ACF function applied to the dataset
+```{r}
+# calculate ACF function for the data
+acf_driver <- acf(UKDriverDeaths)
+```
+
+### Autogresive modeling, fitting and prediction 
+```{r}
+# apply basic AR model to the data
+driver_fit_AR <- arima(driver, order = c(1,0,0))
+print(driver_fit_AR)
+ts.plot(driver, gpars = list(ylab = "Deaths", xlab = "Year"))
+driver_fitted_AR <- driver - residuals(driver_fit_AR)
+points(driver_fitted_AR, lty = 2, col = "red", type = "l")
+# Forecasting events in the future year (1985)
+```
+
+### Moving Average modeling, fitting and prediction 
+```{r}
+predict(driver_fit_AR, n.ahead = 12)
+# apply basic MA model to the data
+driver_fit_MA <- arima(driver, order = c(0,0,1))
+print(driver_fit_MA)
+ts.plot(driver, gpars = list(ylab = "Deaths", xlab = "Year"))
+driver_fitted_MA <- driver - residuals(driver_fit_MA)
+points(driver_fitted_MA, lty = 2, col = "red", type = "l")
+# Forecasting events in the future year (1985)
+predict(driver_fit_MA, n.ahead = 12)
+```
+
+### Which model is better?
+```{r}
+AIC(driver_fit_AR); BIC(driver_fit_AR)
+AIC(driver_fit_MA); BIC(driver_fit_MA)
+
+```
+AR is a better model than MA for this dataset based on the AIC and BIC values
